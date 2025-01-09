@@ -1,51 +1,25 @@
-import { useState } from "react";
-import "tailwindcss/tailwind.css";
-import { toast } from "react-toastify";
-import "./index.css";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { loginRequest } from "./features/auth/authSlice";
 
 const App = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberme, setRememberme] = useState(false);
-  const [message, setMessage] = useState("");
-  const [messageColor, setMessageColor] = useState("");
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    const rememberme = e.target.rememberme.checked;
 
-    const response = await fetch(
-      "https://seattlelisted.com/user/authenticate.php?mobile=yes",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          rememberme: rememberme ? 1 : 0,
-        }),
-      }
-    );
-
-    const result = await response.json();
-
-    if (result.success) {
-      toast.success(result.success);
-    } else if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.error(result.error);
-    }
+    dispatch(loginRequest({ email, password, rememberme }));
   };
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-        <div className={`mb-4 text-center font-medium ${messageColor}`}>
-          {message}
-        </div>
+        {error && <div className="mb-4 text-red-500 text-center">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -60,8 +34,6 @@ const App = () => {
               id="email"
               name="email"
               className="mt-1 p-2 w-full border rounded-md"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -78,8 +50,6 @@ const App = () => {
               id="password"
               name="password"
               className="mt-1 p-2 w-full border rounded-md"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
@@ -90,8 +60,6 @@ const App = () => {
               id="rememberme"
               name="rememberme"
               className="mr-2"
-              checked={rememberme}
-              onChange={() => setRememberme(!rememberme)}
             />
             <label htmlFor="rememberme" className="text-sm text-gray-700">
               Remember me
@@ -101,8 +69,9 @@ const App = () => {
           <button
             type="submit"
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md"
+            disabled={loading}
           >
-            Login
+            {loading ? "Loading..." : "Login"}
           </button>
         </form>
       </div>
